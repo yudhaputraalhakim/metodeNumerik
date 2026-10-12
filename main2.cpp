@@ -491,35 +491,41 @@ void metodeNewtonRaphson(double a) {
     cout << "=======================================" << endl;
 }
 
+double inputAngka(string pesan) {
+    double nilai;
+    cout << pesan;
+
+    while (!(cin >> nilai)) {
+        cout << "Input tidak valid. Masukkan angka: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    return nilai;
+}
+
+
 int main() {
     int pilihan;
     double a, b, step;
 
-    cout << "=======================================" << endl;
-    cout << "  PROGRAM PENCARIAN AKAR PERSAMAAN" << endl;
-    cout << "  (Input Persamaan Langsung dari User)" << endl;
-    cout << "=======================================" << endl;
-    cout << endl;
-
-    // Input persamaan pertama kali dari user
     inputPersamaan();
 
     do {
-        cout << "\n=======================================" << endl;
-        cout << "Persamaan saat ini: f(x) = " << persamaanUser << endl;
-        cout << "=======================================" << endl;
-        cout << "Pilih metode yang ingin digunakan:" << endl;
-        cout << "1. Metode Tabel        (Metode Tertutup)" << endl;
-        cout << "2. Metode Biseksi      (Metode Tertutup)" << endl;
-        cout << "3. Metode Regula Falsi (Metode Tertutup)" << endl;
-        cout << "4. Metode Newton-Raphson (Metode Terbuka)" << endl;
-        cout << "5. Ganti Persamaan f(x)" << endl;
-        cout << "0. Keluar" << endl;
-        cout << "---------------------------------------" << endl;
-        cout << "Masukkan pilihan (0-5): ";
+        cout << "\n=======================================\n"
+             << "Persamaan: f(x) = " << persamaanUser << '\n'
+             << "1. Metode Tabel\n"
+             << "2. Metode Biseksi\n"
+             << "3. Metode Regula Falsi\n"
+             << "4. Metode Newton-Raphson\n"
+             << "5. Ganti Persamaan\n"
+             << "0. Keluar\n"
+             << "=======================================\n";
+
+        cout << "Masukkan pilihan: ";
 
         if (!(cin >> pilihan)) {
-            cout << "\nInput tidak valid! Harap masukkan angka." << endl;
+            cout << "Input harus berupa angka!\n";
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
@@ -527,88 +533,49 @@ int main() {
 
         switch (pilihan) {
             case 1:
-                cout << "\n--- Metode Tabel ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                while (!(cin >> a)) {
-                    cout << "Input salah! Masukkan angka untuk batas bawah (a): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
-                cout << "Masukkan batas atas (b) : ";
-                while (!(cin >> b)) {
-                    cout << "Input salah! Masukkan angka untuk batas atas (b): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
-                cout << "Masukkan step (h)       : ";
-                while (!(cin >> step) || step <= 0) {
-                    cout << "Step harus angka positif! Masukkan step: ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
+
+                do {
+                    step = inputAngka("Step (h): ");
+                    if (step <= 0)
+                        cout << "Step harus lebih besar dari 0!\n";
+                } while (step <= 0);
+
                 metodeTabel(a, b, step);
                 break;
 
             case 2:
-                cout << "\n--- Metode Biseksi ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                while (!(cin >> a)) {
-                    cout << "Input salah! Masukkan angka untuk batas bawah (a): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
-                cout << "Masukkan batas atas (b) : ";
-                while (!(cin >> b)) {
-                    cout << "Input salah! Masukkan angka untuk batas atas (b): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
                 metodeBiseksi(a, b);
                 break;
 
             case 3:
-                cout << "\n--- Metode Regula Falsi ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                while (!(cin >> a)) {
-                    cout << "Input salah! Masukkan angka untuk batas bawah (a): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
-                cout << "Masukkan batas atas (b) : ";
-                while (!(cin >> b)) {
-                    cout << "Input salah! Masukkan angka untuk batas atas (b): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
                 metodeRegulaFalsi(a, b);
                 break;
 
             case 4:
-                cout << "\n--- Metode Newton-Raphson ---" << endl;
-                cout << "Masukkan tebakan awal (a): ";
-                while (!(cin >> a)) {
-                    cout << "Input salah! Masukkan angka untuk tebakan awal (a): ";
-                    cin.clear();
-                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                }
+                a = inputAngka("Tebakan awal (a): ");
                 metodeNewtonRaphson(a);
                 break;
 
             case 5:
-                cout << endl;
                 inputPersamaan();
                 break;
 
             case 0:
-                cout << "\nProgram selesai. Terima kasih!" << endl;
+                cout << "Program selesai. Terima kasih!\n";
                 break;
 
             default:
-                cout << "\nPilihan tidak valid! Silakan pilih menu antara 0 sampai 5." << endl;
-                break;
+                cout << "Pilihan tidak valid!\n";
         }
 
     } while (pilihan != 0);
 
     return 0;
 }
+
