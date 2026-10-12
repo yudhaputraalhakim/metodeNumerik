@@ -265,7 +265,6 @@ void metodeTabel(double a, double b, double step) {
 
 // METODE BISEKSI (METODE TERTUTUP)
 // a = batas bawah, b = batas atas, c = akar baru
-// fa = f(a), fb = f(b), fc = f(c)
 void metodeBiseksi(double a, double b) {
     cout << "\n=======================================" << endl;
     cout << "        METODE BISEKSI" << endl;
@@ -311,8 +310,7 @@ void metodeBiseksi(double a, double b) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "fb"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(88, '-') << endl;
 
     double c = a;
@@ -324,7 +322,6 @@ void metodeBiseksi(double a, double b) {
         fb = f(b);
         c = (a + b) / 2.0;
         fc = f(c);
-        double error = fabs(b - a) / 2.0;
 
         iterasi++;
         cout << setw(8)  << iterasi
@@ -333,10 +330,9 @@ void metodeBiseksi(double a, double b) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << fb
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || error < ERROR_TOLERANCE) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
@@ -356,7 +352,6 @@ void metodeBiseksi(double a, double b) {
 
 // METODE REGULA FALSI (METODE TERTUTUP)
 // a = batas bawah, b = batas atas, c = akar baru
-// fa = f(a), fb = f(b), fc = f(c)
 void metodeRegulaFalsi(double a, double b) {
     cout << "\n=======================================" << endl;
     cout << "     METODE REGULA FALSI" << endl;
@@ -402,11 +397,10 @@ void metodeRegulaFalsi(double a, double b) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "fb"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(88, '-') << endl;
 
-    double c = a, c_lama = 0;
+    double c = a;
     double fc = 0;
     int iterasi = 0;
 
@@ -423,7 +417,6 @@ void metodeRegulaFalsi(double a, double b) {
         fc = f(c);
 
         iterasi++;
-        double error = (iterasi == 1) ? fabs(fc) : fabs(c - c_lama);
 
         cout << setw(8)  << iterasi
              << setw(12) << fixed << setprecision(6) << a
@@ -431,10 +424,9 @@ void metodeRegulaFalsi(double a, double b) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << fb
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || (iterasi > 1 && error < ERROR_TOLERANCE)) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
@@ -443,8 +435,6 @@ void metodeRegulaFalsi(double a, double b) {
         } else {
             a = c;
         }
-
-        c_lama = c;
     }
 
     cout << string(88, '-') << endl;
@@ -457,7 +447,6 @@ void metodeRegulaFalsi(double a, double b) {
 // METODE NEWTON-RAPHSON (METODE TERBUKA)
 // a = tebakan awal / nilai saat ini
 // c = akar yang baru
-// fa = f(a), fc = f(c)
 void metodeNewtonRaphson(double a) {
     cout << "\n=======================================" << endl;
     cout << "     METODE NEWTON-RAPHSON" << endl;
@@ -473,8 +462,7 @@ void metodeNewtonRaphson(double a) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "f'(a)"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(86, '-') << endl;
 
     int iterasi = 0;
@@ -493,7 +481,6 @@ void metodeNewtonRaphson(double a) {
 
         c = a - fa / dfa;  // c adalah akar baru
         fc = f(c);
-        double error = fabs(c - a);
 
         iterasi++;
         cout << setw(8)  << iterasi
@@ -501,10 +488,9 @@ void metodeNewtonRaphson(double a) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << dfa
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || error < ERROR_TOLERANCE) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
