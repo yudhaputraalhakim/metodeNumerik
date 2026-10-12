@@ -12,9 +12,7 @@ using namespace std;
 const double ERROR_TOLERANCE = 0.0001;
 const int MAX_ITERASI = 100;
 
-// ============================================================
 // PARSER & EVALUATOR PERSAMAAN MATEMATIKA
-// ============================================================
 class ExpressionEvaluator {
 private:
     string expr;
@@ -166,7 +164,7 @@ double inputAngka(const string& pesan) {
     return nilai;
 }
 
-// HELPER CETAK HASIL AKAR
+//CETAK HASIL AKAR
 void printHasilAkar(double c, int iterasi, double fc, int garis = 88) {
     cout << string(garis, '-') << "\n"
          << "Akar baru ditemukan : c = " << fixed << setprecision(6) << c << "\n"
@@ -175,7 +173,7 @@ void printHasilAkar(double c, int iterasi, double fc, int garis = 88) {
          << "=======================================\n";
 }
 
-// HELPER VALIDASI INTERVAL METODE TERTUTUP
+//VALIDASI INTERVAL METODE TERTUTUP
 bool validasiInterval(double &a, double &b, double &fa, double &fb) {
     if (a > b) swap(a, b);
     fa = f(a);
@@ -392,7 +390,6 @@ void metodeNewtonRaphson(double a) {
     printHasilAkar(c, iterasi, fc, 86);
 }
 
-// FUNGSI UTAMA (MAIN)
 int main() {
     int pilihan;
     double a, b, step;

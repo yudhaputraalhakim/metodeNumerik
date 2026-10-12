@@ -1,95 +1,262 @@
 #include <iostream>
+#include <string>
+#include <cctype>
 #include <cmath>
 #include <iomanip>
-#include <algorithm>
 #include <limits>
+#include <algorithm>
 
 using namespace std;
 
-// DEFINISI FUNGSI f(x) DAN TURUNANNYA f'(x)
-// Contoh: f(x) = x^3 - 6x^2 + 11x - 6
+// BATASAN ERROR 
+const double ERROR_TOLERANCE = 0.0001;
+const int MAX_ITERASI = 100;
+
+// ============================================================
+// PARSER & EVALUATOR PERSAMAAN MATEMATIKA
+// ============================================================
+class ExpressionEvaluator {
+private:
+    string expr;
+    size_t pos;
+
+    void skipWhitespace() {
+        while (pos < expr.size() && isspace(expr[pos])) pos++;
+    }
+
+    char peek() {
+        skipWhitespace();
+        return (pos < expr.size()) ? expr[pos] : '\0';
+    }
+
+    char get() {
+        skipWhitespace();
+        return (pos < expr.size()) ? expr[pos++] : '\0';
+    }
+
+    string preprocess(const string& s) {
+        string res = "";
+        for (size_t i = 0; i < s.size(); i++) {
+            res += s[i];
+            if (i + 1 < s.size()) {
+                char c1 = s[i];
+                char c2 = s[i + 1];
+                if (isdigit(c1) && (c2 == 'x' || c2 == 'X' || c2 == '(' || isalpha(c2))) {
+                    if ((c1 != 'e' && c1 != 'E') && !(c2 == 'e' || c2 == 'E')) {
+                        res += '*';
+                    }
+                } else if ((c1 == 'x' || c1 == 'X' || c1 == ')') && 
+                           (isdigit(c2) || c2 == '(' || c2 == 'x' || c2 == 'X' || isalpha(c2))) {
+                    res += '*';
+                }
+            }
+        }
+        return res;
+    }
+
+    double parseExpression(double x) {
+        double val = parseTerm(x);
+        while (true) {
+            char op = peek();
+            if (op == '+') {
+                get();
+                val += parseTerm(x);
+            } else if (op == '-') {
+                get();
+                val -= parseTerm(x);
+            } else {
+                break;
+            }
+        }
+        return val;
+    }
+
+    double parseTerm(double x) {
+        double val = parsePower(x);
+        while (true) {
+            char op = peek();
+            if (op == '*') {
+                get();
+                val *= parsePower(x);
+            } else if (op == '/') {
+                get();
+                double div = parsePower(x);
+                if (fabs(div) < 1e-15) val = 0;
+                else val /= div;
+            } else {
+                break;
+            }
+        }
+        return val;
+    }
+
+    double parsePower(double x) {
+        double val = parsePrimary(x);
+        if (peek() == '^') {
+            get();
+            double p = parsePower(x);
+            val = pow(val, p);
+        }
+        return val;
+    }
+
+    double parsePrimary(double x) {
+        skipWhitespace();
+        char c = peek();
+
+        if (c == '+') {
+            get();
+            return parsePrimary(x);
+        }
+        if (c == '-') {
+            get();
+            return -parsePrimary(x);
+        }
+
+        if (c == '(') {
+            get();
+            double val = parseExpression(x);
+            if (peek() == ')') get();
+            return val;
+        }
+
+        if (c == 'x' || c == 'X') {
+            get();
+            return x;
+        }
+
+        if (isdigit(c) || c == '.') {
+            size_t start = pos;
+            while (pos < expr.size() && (isdigit(expr[pos]) || expr[pos] == '.')) {
+                pos++;
+            }
+            return stod(expr.substr(start, pos - start));
+        }
+
+        if (isalpha(c)) {
+            string name = "";
+            while (pos < expr.size() && isalpha(expr[pos])) {
+                name += tolower(expr[pos++]);
+            }
+            if (name == "e") return exp(1.0);
+            if (name == "pi") return acos(-1.0);
+
+            double arg = parsePrimary(x);
+            if (name == "sin") return sin(arg);
+            if (name == "cos") return cos(arg);
+            if (name == "tan") return tan(arg);
+            if (name == "exp") return exp(arg);
+            if (name == "ln" || name == "log") return log(arg);
+            if (name == "sqrt") return sqrt(arg);
+            if (name == "abs") return fabs(arg);
+        }
+
+        return 0;
+    }
+
+public:
+    ExpressionEvaluator() : expr("0"), pos(0) {}
+    ExpressionEvaluator(const string& e) { setExpression(e); }
+
+    void setExpression(const string& e) {
+        expr = preprocess(e);
+        pos = 0;
+    }
+
+    double eval(double x) {
+        pos = 0;
+        return parseExpression(x);
+    }
+};
+
+static ExpressionEvaluator evaluatorPersamaan;
+static string persamaanUser = "";
+
+// FUNGSI UNTUK INPUT PERSAMAAN
+void inputPersamaan() {
+    cout << "Masukkan persamaan f(x):" << endl;
+    cout << "Contoh format: x^3 - 6x^2 + 11x - 6 atau x^2 - 4" << endl;
+    cout << "f(x) = ";
+    
+    if (cin.peek() == '\n') {
+        cin.ignore();
+    }
+    getline(cin, persamaanUser);
+
+    while (persamaanUser.empty()) {
+        cout << "Persamaan tidak boleh kosong! f(x) = ";
+        getline(cin, persamaanUser);
+    }
+
+    evaluatorPersamaan.setExpression(persamaanUser);
+    cout << "\n-> Persamaan berhasil disimpan: f(x) = " << persamaanUser << endl;
+}
+
+// EVALUASI f(x) DAN TURUNAN f'(x)
 double f(double x) {
-    return pow(x, 3) - 6 * pow(x, 2) + 11 * x - 6;
+    return evaluatorPersamaan.eval(x);
 }
 
 double f_turunan(double x) {
-    return 3 * pow(x, 2) - 12 * x + 11;
+    const double h = 1e-6;
+    return (f(x + h) - f(x - h)) / (2.0 * h);
 }
-
-// BATASAN ERROR
-const double ERROR_TOLERANCE = 0.0001;
-const int MAX_ITERASI = 100;
 
 // METODE TABEL (METODE TERTUTUP)
 // a = batas bawah, b = batas atas, c = akar baru
 void metodeTabel(double a, double b, double step) {
     cout << "\n=======================================" << endl;
-    cout << "        METODE TABEL" << endl;
+    cout << "          METODE TABEL" << endl;
     cout << "=======================================" << endl;
-    
+    cout << "Persamaan       : f(x) = " << persamaanUser << endl;
+
     if (a > b) swap(a, b);
 
-    cout << "Batas bawah (a): " << a << endl;
-    cout << "Batas atas (b) : " << b << endl;
-    cout << "Step           : " << step << endl;
+    if (step <= 0) {
+        cout << "ERROR: Step harus lebih besar dari 0!" << endl;
+        return;
+    }
+
+    cout << "Batas bawah (a) : " << a << endl;
+    cout << "Batas atas (b)  : " << b << endl;
+    cout << "Step            : " << step << endl;
     cout << "---------------------------------------" << endl;
-    cout << setw(10) << "x" 
+
+    cout << setw(10) << "x"
          << setw(15) << "f(x)" << endl;
     cout << "---------------------------------------" << endl;
 
-    double x = a;
-    double prev_x = a;
-    double prev_fx = f(a);
     double c_terbaik = a;
     double min_error = fabs(f(a));
-    bool adaPerubahanTanda = false;
-    double root_interval_kiri = a, root_interval_kanan = a;
 
-    while (x <= b + (step / 2.0)) {
+    for (double x = a; x <= b; x += step) {
         double fx = f(x);
-        cout << setw(10) << fixed << setprecision(4) << x 
-             << setw(15) << fixed << setprecision(6) << fx << endl;
 
-        // Cari x dengan |f(x)| terkecil
+        cout << setw(10) << fixed << setprecision(4) << x
+             << setw(15) << fixed << setprecision(6) << fx
+             << endl;
+
         if (fabs(fx) < min_error) {
             min_error = fabs(fx);
             c_terbaik = x;
         }
-
-        // Cek perubahan tanda
-        if (x != a && prev_fx * fx < 0) {
-            adaPerubahanTanda = true;
-            root_interval_kiri = prev_x;
-            root_interval_kanan = x;
-            // Interpolasi linier untuk perkiraan akar c
-            double c_interpolasi = prev_x - prev_fx * (x - prev_x) / (fx - prev_fx);
-            if (fabs(f(c_interpolasi)) < min_error) {
-                min_error = fabs(f(c_interpolasi));
-                c_terbaik = c_interpolasi;
-            }
-        }
-
-        prev_x = x;
-        prev_fx = fx;
-        x += step;
     }
 
     cout << "---------------------------------------" << endl;
-    if (adaPerubahanTanda) {
-        cout << "Akar berada di antara interval: [" << root_interval_kiri << ", " << root_interval_kanan << "]" << endl;
-    }
-    cout << "Akar baru ditemukan : c = " << fixed << setprecision(6) << c_terbaik << endl;
-    cout << "fc = f(c)           : " << fixed << setprecision(8) << f(c_terbaik) << endl;
+    cout << "Perkiraan akar terbaik : c = "
+         << fixed << setprecision(6) << c_terbaik << endl;
+    cout << "fc = f(c)              : "
+         << fixed << setprecision(8) << f(c_terbaik) << endl;
     cout << "=======================================" << endl;
 }
 
 // METODE BISEKSI (METODE TERTUTUP)
 // a = batas bawah, b = batas atas, c = akar baru
-// fa = f(a), fb = f(b), fc = f(c)
 void metodeBiseksi(double a, double b) {
     cout << "\n=======================================" << endl;
     cout << "        METODE BISEKSI" << endl;
     cout << "=======================================" << endl;
+    cout << "Persamaan       : f(x) = " << persamaanUser << endl;
 
     if (a > b) swap(a, b);
 
@@ -102,7 +269,6 @@ void metodeBiseksi(double a, double b) {
     double fa = f(a);
     double fb = f(b);
 
-    // Cek apakah batas bawah atau atas sudah merupakan akar
     if (fabs(fa) < ERROR_TOLERANCE) {
         cout << "Akar baru ditemukan di batas bawah: c = " << a << endl;
         cout << "fc = f(c) = " << fa << endl;
@@ -116,7 +282,6 @@ void metodeBiseksi(double a, double b) {
         return;
     }
 
-    // Validasi: fa dan fb harus berbeda tanda (fa * fb < 0)
     if (fa * fb > 0) {
         cout << "ERROR: fa dan fb harus berbeda tanda (fa * fb < 0)!" << endl;
         cout << "fa = f(" << a << ") = " << fa << endl;
@@ -132,8 +297,7 @@ void metodeBiseksi(double a, double b) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "fb"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(88, '-') << endl;
 
     double c = a;
@@ -145,7 +309,6 @@ void metodeBiseksi(double a, double b) {
         fb = f(b);
         c = (a + b) / 2.0;
         fc = f(c);
-        double error = fabs(b - a) / 2.0;
 
         iterasi++;
         cout << setw(8)  << iterasi
@@ -154,18 +317,16 @@ void metodeBiseksi(double a, double b) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << fb
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || error < ERROR_TOLERANCE) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
-        // Pembaruan interval (a = batas bawah, b = batas atas)
         if (fa * fc < 0) {
-            b = c;  // Akar berada di antara a dan c
+            b = c;
         } else {
-            a = c;  // Akar berada di antara c dan b
+            a = c;
         }
     }
 
@@ -178,11 +339,11 @@ void metodeBiseksi(double a, double b) {
 
 // METODE REGULA FALSI (METODE TERTUTUP)
 // a = batas bawah, b = batas atas, c = akar baru
-// fa = f(a), fb = f(b), fc = f(c)
 void metodeRegulaFalsi(double a, double b) {
     cout << "\n=======================================" << endl;
     cout << "     METODE REGULA FALSI" << endl;
     cout << "=======================================" << endl;
+    cout << "Persamaan       : f(x) = " << persamaanUser << endl;
 
     if (a > b) swap(a, b);
 
@@ -223,11 +384,10 @@ void metodeRegulaFalsi(double a, double b) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "fb"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(88, '-') << endl;
 
-    double c = a, c_lama = 0;
+    double c = a;
     double fc = 0;
     int iterasi = 0;
 
@@ -244,7 +404,6 @@ void metodeRegulaFalsi(double a, double b) {
         fc = f(c);
 
         iterasi++;
-        double error = (iterasi == 1) ? fabs(fc) : fabs(c - c_lama);
 
         cout << setw(8)  << iterasi
              << setw(12) << fixed << setprecision(6) << a
@@ -252,21 +411,17 @@ void metodeRegulaFalsi(double a, double b) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << fb
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || (iterasi > 1 && error < ERROR_TOLERANCE)) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
-        // Pembaruan interval (a = batas bawah, b = batas atas)
         if (fa * fc < 0) {
-            b = c;  // Akar berada di antara a dan c
+            b = c;
         } else {
-            a = c;  // Akar berada di antara c dan b
+            a = c;
         }
-
-        c_lama = c;
     }
 
     cout << string(88, '-') << endl;
@@ -279,11 +434,11 @@ void metodeRegulaFalsi(double a, double b) {
 // METODE NEWTON-RAPHSON (METODE TERBUKA)
 // a = tebakan awal / nilai saat ini
 // c = akar yang baru
-// fa = f(a), fc = f(c)
 void metodeNewtonRaphson(double a) {
     cout << "\n=======================================" << endl;
     cout << "     METODE NEWTON-RAPHSON" << endl;
     cout << "=======================================" << endl;
+    cout << "Persamaan       : f(x) = " << persamaanUser << endl;
     cout << "Tebakan awal (a): " << a << endl;
     cout << "Toleransi Error : " << ERROR_TOLERANCE << endl;
     cout << "Max Iterasi     : " << MAX_ITERASI << endl;
@@ -294,8 +449,7 @@ void metodeNewtonRaphson(double a) {
          << setw(12) << "c"
          << setw(14) << "fa"
          << setw(14) << "f'(a)"
-         << setw(14) << "fc"
-         << setw(12) << "Error" << endl;
+         << setw(14) << "fc" << endl;
     cout << string(86, '-') << endl;
 
     int iterasi = 0;
@@ -314,7 +468,6 @@ void metodeNewtonRaphson(double a) {
 
         c = a - fa / dfa;  // c adalah akar baru
         fc = f(c);
-        double error = fabs(c - a);
 
         iterasi++;
         cout << setw(8)  << iterasi
@@ -322,10 +475,9 @@ void metodeNewtonRaphson(double a) {
              << setw(12) << fixed << setprecision(6) << c
              << setw(14) << fixed << setprecision(6) << fa
              << setw(14) << fixed << setprecision(6) << dfa
-             << setw(14) << fixed << setprecision(6) << fc
-             << setw(12) << fixed << setprecision(6) << error << endl;
+             << setw(14) << fixed << setprecision(6) << fc << endl;
 
-        if (fabs(fc) < ERROR_TOLERANCE || error < ERROR_TOLERANCE) {
+        if (fabs(fc) < ERROR_TOLERANCE) {
             break;
         }
 
@@ -339,27 +491,41 @@ void metodeNewtonRaphson(double a) {
     cout << "=======================================" << endl;
 }
 
+double inputAngka(string pesan) {
+    double nilai;
+    cout << pesan;
+
+    while (!(cin >> nilai)) {
+        cout << "Input tidak valid. Masukkan angka: ";
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    }
+
+    return nilai;
+}
+
+
 int main() {
     int pilihan;
     double a, b, step;
 
-    cout << "=======================================" << endl;
-    cout << "  PROGRAM PENCARIAN AKAR PERSAMAAN" << endl;
-    cout << "  f(x) = x^3 - 6x^2 + 11x - 6" << endl;
-    cout << "=======================================" << endl;
+    inputPersamaan();
 
     do {
-        cout << "\nPilih metode yang ingin digunakan:" << endl;
-        cout << "1. Metode Tabel        (Metode Tertutup)" << endl;
-        cout << "2. Metode Biseksi      (Metode Tertutup)" << endl;
-        cout << "3. Metode Regula Falsi (Metode Tertutup)" << endl;
-        cout << "4. Metode Newton-Raphson (Metode Terbuka)" << endl;
-        cout << "0. Keluar" << endl;
-        cout << "---------------------------------------" << endl;
-        cout << "Masukkan pilihan (0-4): ";
+        cout << "\n=======================================\n"
+             << "Persamaan: f(x) = " << persamaanUser << '\n'
+             << "1. Metode Tabel\n"
+             << "2. Metode Biseksi\n"
+             << "3. Metode Regula Falsi\n"
+             << "4. Metode Newton-Raphson\n"
+             << "5. Ganti Persamaan\n"
+             << "0. Keluar\n"
+             << "=======================================\n";
+
+        cout << "Masukkan pilihan: ";
 
         if (!(cin >> pilihan)) {
-            cout << "\nInput tidak valid! Harap masukkan angka." << endl;
+            cout << "Input harus berupa angka!\n";
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
             continue;
@@ -367,51 +533,49 @@ int main() {
 
         switch (pilihan) {
             case 1:
-                cout << "\n--- Metode Tabel ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                cin >> a;
-                cout << "Masukkan batas atas (b) : ";
-                cin >> b;
-                cout << "Masukkan step           : ";
-                cin >> step;
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
+
+                do {
+                    step = inputAngka("Step (h): ");
+                    if (step <= 0)
+                        cout << "Step harus lebih besar dari 0!\n";
+                } while (step <= 0);
+
                 metodeTabel(a, b, step);
                 break;
 
             case 2:
-                cout << "\n--- Metode Biseksi ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                cin >> a;
-                cout << "Masukkan batas atas (b) : ";
-                cin >> b;
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
                 metodeBiseksi(a, b);
                 break;
 
             case 3:
-                cout << "\n--- Metode Regula Falsi ---" << endl;
-                cout << "Masukkan batas bawah (a): ";
-                cin >> a;
-                cout << "Masukkan batas atas (b) : ";
-                cin >> b;
+                a = inputAngka("Batas bawah (a): ");
+                b = inputAngka("Batas atas (b): ");
                 metodeRegulaFalsi(a, b);
                 break;
 
             case 4:
-                cout << "\n--- Metode Newton-Raphson ---" << endl;
-                cout << "Masukkan tebakan awal (a): ";
-                cin >> a;
+                a = inputAngka("Tebakan awal (a): ");
                 metodeNewtonRaphson(a);
                 break;
 
+            case 5:
+                inputPersamaan();
+                break;
+
             case 0:
-                cout << "\nProgram selesai. Terima kasih!" << endl;
+                cout << "Program selesai. Terima kasih!\n";
                 break;
 
             default:
-                cout << "\nPilihan tidak valid!" << endl;
-                break;
+                cout << "Pilihan tidak valid!\n";
         }
 
     } while (pilihan != 0);
 
     return 0;
 }
+
