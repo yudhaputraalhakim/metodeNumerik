@@ -206,60 +206,47 @@ double f_turunan(double x) {
 // a = batas bawah, b = batas atas, c = akar baru
 void metodeTabel(double a, double b, double step) {
     cout << "\n=======================================" << endl;
-    cout << "        METODE TABEL" << endl;
+    cout << "          METODE TABEL" << endl;
     cout << "=======================================" << endl;
-    cout << "Persamaan      : f(x) = " << persamaanUser << endl;
+    cout << "Persamaan       : f(x) = " << persamaanUser << endl;
 
     if (a > b) swap(a, b);
 
-    cout << "Batas bawah (a): " << a << endl;
-    cout << "Batas atas (b) : " << b << endl;
-    cout << "Step           : " << step << endl;
+    if (step <= 0) {
+        cout << "ERROR: Step harus lebih besar dari 0!" << endl;
+        return;
+    }
+
+    cout << "Batas bawah (a) : " << a << endl;
+    cout << "Batas atas (b)  : " << b << endl;
+    cout << "Step            : " << step << endl;
     cout << "---------------------------------------" << endl;
-    cout << setw(10) << "x" 
+
+    cout << setw(10) << "x"
          << setw(15) << "f(x)" << endl;
     cout << "---------------------------------------" << endl;
 
-    double x = a;
-    double prev_x = a;
-    double prev_fx = f(a);
     double c_terbaik = a;
     double min_error = fabs(f(a));
-    bool adaPerubahanTanda = false;
-    double root_interval_kiri = a, root_interval_kanan = a;
 
-    while (x <= b + (step / 2.0)) {
+    for (double x = a; x <= b; x += step) {
         double fx = f(x);
-        cout << setw(10) << fixed << setprecision(4) << x 
-             << setw(15) << fixed << setprecision(6) << fx << endl;
+
+        cout << setw(10) << fixed << setprecision(4) << x
+             << setw(15) << fixed << setprecision(6) << fx
+             << endl;
 
         if (fabs(fx) < min_error) {
             min_error = fabs(fx);
             c_terbaik = x;
         }
-
-        if (x != a && prev_fx * fx < 0) {
-            adaPerubahanTanda = true;
-            root_interval_kiri = prev_x;
-            root_interval_kanan = x;
-            double c_interpolasi = prev_x - prev_fx * (x - prev_x) / (fx - prev_fx);
-            if (fabs(f(c_interpolasi)) < min_error) {
-                min_error = fabs(f(c_interpolasi));
-                c_terbaik = c_interpolasi;
-            }
-        }
-
-        prev_x = x;
-        prev_fx = fx;
-        x += step;
     }
 
     cout << "---------------------------------------" << endl;
-    if (adaPerubahanTanda) {
-        cout << "Akar berada di antara interval: [" << root_interval_kiri << ", " << root_interval_kanan << "]" << endl;
-    }
-    cout << "Akar baru ditemukan : c = " << fixed << setprecision(6) << c_terbaik << endl;
-    cout << "fc = f(c)           : " << fixed << setprecision(8) << f(c_terbaik) << endl;
+    cout << "Perkiraan akar terbaik : c = "
+         << fixed << setprecision(6) << c_terbaik << endl;
+    cout << "fc = f(c)              : "
+         << fixed << setprecision(8) << f(c_terbaik) << endl;
     cout << "=======================================" << endl;
 }
 
